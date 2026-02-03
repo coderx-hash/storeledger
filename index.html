@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StoreOps v3 | Pro Ledger</title>
+    <title>StoreOps v3.1 | Pro Ledger</title>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -60,7 +60,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 60vh; /* Dynamic height based on viewport */
+            height: 60vh;
             min-height: 400px;
         }
 
@@ -103,6 +103,15 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .cat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .cat-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -151,16 +160,12 @@
                         <input type="date" id="date" class="form-control form-control-sm">
                     </div>
                     <div class="col-6 col-lg-12 mb-2">
-                        <label class="small fw-bold">Category</label>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="small fw-bold">Category</label>
+                            <a href="#" class="small text-decoration-none" onclick="openCatModal()">⚙️ Manage</a>
+                        </div>
                         <select id="cat" class="form-select form-select-sm">
-                            <option>FOODS</option>
-                            <option>CIGARETTES</option>
-                            <option>ALCOHOL</option>
-                            <option>GCASH</option>
-                            <option>LOAD</option>
-                            <option>UTILITIES</option>
-                            <option>OTHERS</option>
-                        </select>
+                            </select>
                     </div>
                     <div class="col-12 mb-2">
                         <label class="small fw-bold">Description</label>
@@ -211,8 +216,29 @@
     </div>
 </div>
 
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold">Manage Categories</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group input-group-sm mb-3">
+                    <input type="text" id="newCatInput" class="form-control" placeholder="New Category...">
+                    <button class="btn btn-primary" onclick="addNewCategory()">Add</button>
+                </div>
+                <h6 class="small text-muted mb-2">CURRENT LIST:</h6>
+                <div id="categoryList" class="border rounded bg-light" style="max-height: 300px; overflow-y: auto;">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Intro handling
+    // --- INITIALIZATION ---
     window.addEventListener('load', () => {
         setTimeout(() => {
             const overlay = document.getElementById('intro-overlay');
@@ -222,8 +248,71 @@
     });
 
     let db = JSON.parse(localStorage.getItem('StoreOps_LocalDB')) || [];
-    document.getElementById('date').valueAsDate = new Date();
+    
+    // Default categories if none exist
+    const defaultCats = ['FOODS', 'CIGARETTES', 'ALCOHOL', 'GCASH', 'LOAD', 'UTILITIES', 'OTHERS'];
+    let categories = JSON.parse(localStorage.getItem('StoreOps_Categories')) || defaultCats;
 
+    document.getElementById('date').valueAsDate = new Date();
+    const catModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+
+    // --- CATEGORY FUNCTIONS ---
+    function renderCategories() {
+        // 1. Populate Main Dropdown
+        const select = document.getElementById('cat');
+        const currentSelection = select.value;
+        select.innerHTML = '';
+        categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.innerText = c;
+            select.appendChild(opt);
+        });
+        if(categories.includes(currentSelection)) select.value = currentSelection;
+
+        // 2. Populate Modal List
+        const list = document.getElementById('categoryList');
+        list.innerHTML = '';
+        categories.forEach(c => {
+            list.innerHTML += `
+                <div class="cat-item">
+                    <span class="small fw-semibold">${c}</span>
+                    <button class="btn btn-sm text-danger p-0" onclick="deleteCategory('${c}')" style="line-height:1;">&times;</button>
+                </div>
+            `;
+        });
+    }
+
+    function openCatModal() {
+        document.getElementById('newCatInput').value = '';
+        catModal.show();
+    }
+
+    function addNewCategory() {
+        const input = document.getElementById('newCatInput');
+        const val = input.value.trim().toUpperCase();
+        
+        if(!val) return alert("Please enter a name");
+        if(categories.includes(val)) return alert("Category already exists");
+
+        categories.push(val);
+        categories.sort(); // Keep alphabetical
+        saveCategories();
+        input.value = '';
+    }
+
+    function deleteCategory(catName) {
+        if(!confirm(`Delete category "${catName}"?`)) return;
+        categories = categories.filter(c => c !== catName);
+        saveCategories();
+    }
+
+    function saveCategories() {
+        localStorage.setItem('StoreOps_Categories', JSON.stringify(categories));
+        renderCategories();
+    }
+
+    // --- TRANSACTION FUNCTIONS ---
     function logEntry() {
         const date = document.getElementById('date').value;
         const cat = document.getElementById('cat').value;
@@ -232,6 +321,7 @@
         const type = document.querySelector('input[name="type"]:checked').value;
 
         if (!date || !desc || isNaN(amt)) return alert("Please fill all fields.");
+        if (!cat) return alert("Please create and select a category first.");
 
         db.unshift({ id: Date.now(), date, cat, desc, amt, type });
         sync();
@@ -255,10 +345,10 @@
 
     function sync() {
         localStorage.setItem('StoreOps_LocalDB', JSON.stringify(db));
-        render();
+        renderLedger();
     }
 
-    function render() {
+    function renderLedger() {
         const list = document.getElementById('ledgerBody');
         list.innerHTML = '';
         let sales = 0, expenses = 0;
@@ -292,7 +382,9 @@
         document.getElementById('clock').innerText = new Date().toLocaleString();
     }, 1000);
 
-    render();
+    // Initial Render
+    renderCategories();
+    renderLedger();
 </script>
 
 </body>
