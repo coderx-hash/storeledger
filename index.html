@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoreOps v3 | Pro Ledger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0f172a;
+            --accent-blue: #2563eb;
+            --border-color: #e2e8f0;
+            --success-green: #059669;
+            --danger-red: #dc2626;
+        }
+
+        body { 
+            background-color: #f8fafc; 
+            font-family: 'Inter', sans-serif;
+            color: var(--primary-dark);
+            height: 100vh;
+        }
+
+        .top-bar {
+            background: var(--primary-dark);
+            color: white;
+            padding: 12px 0;
+            border-bottom: 4px solid var(--accent-blue);
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* FIXED HEIGHT SCROLLABLE TABLE */
+        .ledger-container {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden; /* Clips the table */
+            display: flex;
+            flex-direction: column;
+            height: 550px; /* Fixed height for the whole section */
+        }
+
+        .table-responsive {
+            flex-grow: 1;
+            overflow-y: auto; /* Enable vertical scroll */
+        }
+
+        /* Sticky Table Header */
+        thead {
+            position: sticky;
+            top: 0;
+            background-color: #f1f5f9 !important;
+            z-index: 10;
+        }
+
+        th {
+            background-color: #f1f5f9 !important;
+            border-bottom: 2px solid var(--primary-dark) !important;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .input-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .amount-pos { color: var(--success-green); font-weight: 800; }
+        .amount-neg { color: var(--danger-red); font-weight: 800; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-white">STORE<span style="color: var(--accent-blue)">OPS</span> <small class="fw-light opacity-50">PRO LEDGER</small></h5>
+        <div id="clock" class="small fw-bold opacity-75"></div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="row g-4">
+        
+        <div class="col-lg-4 col-xl-3">
+            <div class="row g-3 mb-4 text-center">
+                <div class="col-6">
+                    <div class="stat-card">
+                        <small class="text-muted d-block small">INCOME</small>
+                        <span class="amount-pos" id="totalSales">₱0</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card">
+                        <small class="text-muted d-block small">EXPENSES</small>
+                        <span class="amount-neg" id="totalExpenses">₱0</span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="stat-card bg-light border-dark">
+                        <small class="text-muted d-block small">NET CASH</small>
+                        <h4 class="mb-0 fw-bold" id="netProfit">₱0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-card">
+                <div class="mb-3">
+                    <label class="small fw-bold">Date</label>
+                    <input type="date" id="date" class="form-control form-control-sm">
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold">Category</label>
+                    <select id="cat" class="form-select form-select-sm">
+                        <option>FOODS</option>
+                        <option>CIGARETTES</option>
+                        <option>ALCOHOL</option>
+                        <option>GCASH</option>
+                        <option>LOAD</option>
+                        <option>UTILITIES</option>
+                        <option>OTHERS</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold">Item Description</label>
+                    <input type="text" id="desc" class="form-control form-control-sm" placeholder="Details...">
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold">Amount</label>
+                    <input type="number" id="amt" class="form-control form-control-sm" placeholder="0.00">
+                </div>
+                <div class="mb-4 text-center">
+                    <div class="btn-group btn-group-sm w-100">
+                        <input type="radio" class="btn-check" name="type" id="typeSale" value="sale" checked>
+                        <label class="btn btn-outline-success" for="typeSale">Income</label>
+                        <input type="radio" class="btn-check" name="type" id="typeExp" value="expense">
+                        <label class="btn btn-outline-danger" for="typeExp">Expense</label>
+                    </div>
+                </div>
+                <button class="btn btn-primary w-100 fw-bold" onclick="logEntry()">SAVE TRANSACTION</button>
+            </div>
+        </div>
+
+        <div class="col-lg-8 col-xl-9">
+            <div class="ledger-container">
+                <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-uppercase">Activity History</h6>
+                    <button class="btn btn-xs btn-outline-secondary py-0" style="font-size: 10px;" onclick="wipeData()">WIPE DATABASE</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr class="small">
+                                <th class="ps-3">DATE</th>
+                                <th>CATEGORY</th>
+                                <th>DESCRIPTION</th>
+                                <th class="text-end">AMOUNT</th>
+                                <th class="text-center">X</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-2 text-muted small">
+                * All data is saved automatically to your browser's local storage.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load Data or Initial Array
+    let db = JSON.parse(localStorage.getItem('StoreOps_LocalDB')) || [];
+
+    // Set Today's Date
+    document.getElementById('date').valueAsDate = new Date();
+
+    function logEntry() {
+        const date = document.getElementById('date').value;
+        const cat = document.getElementById('cat').value;
+        const desc = document.getElementById('desc').value;
+        const amt = parseFloat(document.getElementById('amt').value);
+        const type = document.querySelector('input[name="type"]:checked').value;
+
+        if (!date || !desc || isNaN(amt)) return alert("Missing entry details.");
+
+        db.unshift({ id: Date.now(), date, cat, desc, amt, type });
+        sync();
+
+        document.getElementById('desc').value = '';
+        document.getElementById('amt').value = '';
+    }
+
+    function removeEntry(id) {
+        db = db.filter(item => item.id !== id);
+        sync();
+    }
+
+    function wipeData() {
+        if(confirm("DANGER: This will delete ALL history. Proceed?")) {
+            db = [];
+            sync();
+        }
+    }
+
+    function sync() {
+        // Save to LocalStorage
+        localStorage.setItem('StoreOps_LocalDB', JSON.stringify(db));
+        render();
+    }
+
+    function render() {
+        const list = document.getElementById('ledgerBody');
+        list.innerHTML = '';
+        let sales = 0, expenses = 0;
+
+        db.forEach(item => {
+            const isSale = item.type === 'sale';
+            if(isSale) sales += item.amt; else expenses += item.amt;
+
+            list.innerHTML += `
+                <tr class="small">
+                    <td class="ps-3 text-muted" style="font-size: 0.75rem;">${item.date}</td>
+                    <td><span class="badge bg-light text-dark border">${item.cat}</span></td>
+                    <td class="fw-bold">${item.desc}</td>
+                    <td class="text-end ${isSale ? 'amount-pos' : 'amount-neg'}">
+                        ₱${item.amt.toLocaleString()}
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm p-0 text-muted" onclick="removeEntry(${item.id})">✖</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('totalSales').innerText = `₱${sales.toLocaleString()}`;
+        document.getElementById('totalExpenses').innerText = `₱${expenses.toLocaleString()}`;
+        document.getElementById('netProfit').innerText = `₱${(sales - expenses).toLocaleString()}`;
+        document.getElementById('netProfit').className = (sales-expenses) >= 0 ? 'mb-0 fw-bold amount-pos' : 'mb-0 fw-bold amount-neg';
+    }
+
+    // Live Clock
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleString();
+    }, 1000);
+
+    render();
+</script>
+
+</body>
+</html>
