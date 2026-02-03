@@ -19,7 +19,22 @@
             background-color: #f8fafc; 
             font-family: 'Inter', sans-serif;
             color: var(--primary-dark);
-            height: 100vh;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* INTRO OVERLAY */
+        #intro-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-out;
+            color: white;
         }
 
         .top-bar {
@@ -37,23 +52,28 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* FIXED HEIGHT SCROLLABLE TABLE */
+        /* RESPONSIVE LEDGER HEIGHT */
         .ledger-container {
             background: white;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow: hidden; /* Clips the table */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 550px; /* Fixed height for the whole section */
+            height: 60vh; /* Dynamic height based on viewport */
+            min-height: 400px;
+        }
+
+        @media (min-width: 992px) {
+            .ledger-container { height: 75vh; }
+            .input-card { position: sticky; top: 20px; }
         }
 
         .table-responsive {
             flex-grow: 1;
-            overflow-y: auto; /* Enable vertical scroll */
+            overflow-y: auto;
         }
 
-        /* Sticky Table Header */
         thead {
             position: sticky;
             top: 0;
@@ -64,8 +84,8 @@
         th {
             background-color: #f1f5f9 !important;
             border-bottom: 2px solid var(--primary-dark) !important;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+            text-transform: uppercase;
         }
 
         .input-card {
@@ -73,125 +93,135 @@
             border: 1px solid var(--border-color);
             padding: 20px;
             border-radius: 8px;
-            position: sticky;
-            top: 20px;
+            margin-bottom: 20px;
         }
 
         .amount-pos { color: var(--success-green); font-weight: 800; }
         .amount-neg { color: var(--danger-red); font-weight: 800; }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
 
+<div id="intro-overlay">
+    <h1 class="fw-bold" style="font-family: 'Chakra Petch';">STORE<span style="color: var(--accent-blue)">OPS</span></h1>
+    <p class="opacity-50 small tracking-widest">INITIALIZING SECURE LEDGER...</p>
+</div>
+
 <div class="top-bar mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 text-white">STORE<span style="color: var(--accent-blue)">OPS</span> <small class="fw-light opacity-50">PRO LEDGER</small></h5>
-        <div id="clock" class="small fw-bold opacity-75"></div>
+    <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-white" style="font-family: 'Chakra Petch'; font-size: 1.1rem;">STORE<span style="color: var(--accent-blue)">OPS</span> <small class="fw-light opacity-50 d-none d-md-inline">PRO LEDGER</small></h5>
+        <div id="clock" class="small fw-bold opacity-75" style="font-size: 0.75rem;"></div>
     </div>
 </div>
 
-<div class="container-fluid px-4">
+<div class="container-fluid px-3 px-md-4">
     <div class="row g-4">
         
         <div class="col-lg-4 col-xl-3">
-            <div class="row g-3 mb-4 text-center">
+            <div class="row g-2 mb-4 text-center">
                 <div class="col-6">
                     <div class="stat-card">
-                        <small class="text-muted d-block small">INCOME</small>
-                        <span class="amount-pos" id="totalSales">₱0</span>
+                        <small class="text-muted d-block" style="font-size: 0.65rem;">INCOME</small>
+                        <span class="amount-pos small" id="totalSales">₱0</span>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="stat-card">
-                        <small class="text-muted d-block small">EXPENSES</small>
-                        <span class="amount-neg" id="totalExpenses">₱0</span>
+                        <small class="text-muted d-block" style="font-size: 0.65rem;">EXPENSES</small>
+                        <span class="amount-neg small" id="totalExpenses">₱0</span>
                     </div>
                 </div>
                 <div class="col-12">
-                    <div class="stat-card bg-light border-dark">
+                    <div class="stat-card bg-light">
                         <small class="text-muted d-block small">NET CASH</small>
                         <h4 class="mb-0 fw-bold" id="netProfit">₱0</h4>
                     </div>
                 </div>
             </div>
 
-            <div class="input-card">
-                <div class="mb-3">
-                    <label class="small fw-bold">Date</label>
-                    <input type="date" id="date" class="form-control form-control-sm">
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Category</label>
-                    <select id="cat" class="form-select form-select-sm">
-                        <option>FOODS</option>
-                        <option>CIGARETTES</option>
-                        <option>ALCOHOL</option>
-                        <option>GCASH</option>
-                        <option>LOAD</option>
-                        <option>UTILITIES</option>
-                        <option>OTHERS</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Item Description</label>
-                    <input type="text" id="desc" class="form-control form-control-sm" placeholder="Details...">
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Amount</label>
-                    <input type="number" id="amt" class="form-control form-control-sm" placeholder="0.00">
-                </div>
-                <div class="mb-4 text-center">
-                    <div class="btn-group btn-group-sm w-100">
-                        <input type="radio" class="btn-check" name="type" id="typeSale" value="sale" checked>
-                        <label class="btn btn-outline-success" for="typeSale">Income</label>
-                        <input type="radio" class="btn-check" name="type" id="typeExp" value="expense">
-                        <label class="btn btn-outline-danger" for="typeExp">Expense</label>
+            <div class="input-card shadow-sm">
+                <div class="row g-2">
+                    <div class="col-6 col-lg-12 mb-2">
+                        <label class="small fw-bold">Date</label>
+                        <input type="date" id="date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6 col-lg-12 mb-2">
+                        <label class="small fw-bold">Category</label>
+                        <select id="cat" class="form-select form-select-sm">
+                            <option>FOODS</option>
+                            <option>CIGARETTES</option>
+                            <option>ALCOHOL</option>
+                            <option>GCASH</option>
+                            <option>LOAD</option>
+                            <option>UTILITIES</option>
+                            <option>OTHERS</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <label class="small fw-bold">Description</label>
+                        <input type="text" id="desc" class="form-control form-control-sm" placeholder="Ex: Daily Sales">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="small fw-bold">Amount</label>
+                        <input type="number" id="amt" class="form-control form-control-sm" placeholder="0.00">
                     </div>
                 </div>
-                <button class="btn btn-primary w-100 fw-bold" onclick="logEntry()">SAVE TRANSACTION</button>
+                
+                <div class="btn-group btn-group-sm w-100 mb-3">
+                    <input type="radio" class="btn-check" name="type" id="typeSale" value="sale" checked>
+                    <label class="btn btn-outline-success" for="typeSale">Income</label>
+                    <input type="radio" class="btn-check" name="type" id="typeExp" value="expense">
+                    <label class="btn btn-outline-danger" for="typeExp">Expense</label>
+                </div>
+                
+                <button class="btn btn-primary w-100 fw-bold py-2" onclick="logEntry()">SAVE TRANSACTION</button>
             </div>
         </div>
 
         <div class="col-lg-8 col-xl-9">
-            <div class="ledger-container">
+            <div class="ledger-container shadow-sm">
                 <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-uppercase">Activity History</h6>
-                    <button class="btn btn-xs btn-outline-secondary py-0" style="font-size: 10px;" onclick="wipeData()">WIPE DATABASE</button>
+                    <h6 class="mb-0 fw-bold text-uppercase small">Activity History</h6>
+                    <button class="btn btn-sm btn-outline-danger py-0" style="font-size: 10px;" onclick="wipeData()">WIPE ALL</button>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" style="min-width: 500px;">
                         <thead>
-                            <tr class="small">
+                            <tr>
                                 <th class="ps-3">DATE</th>
-                                <th>CATEGORY</th>
+                                <th>CAT.</th>
                                 <th>DESCRIPTION</th>
                                 <th class="text-end">AMOUNT</th>
-                                <th class="text-center">X</th>
+                                <th class="text-center">DEL</th>
                             </tr>
                         </thead>
-                        <tbody id="ledgerBody">
-                            </tbody>
+                        <tbody id="ledgerBody"></tbody>
                     </table>
                 </div>
             </div>
-            <div class="mt-2 text-muted small">
-                * All data is saved automatically to your browser's local storage.
+            <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+                * Data is stored locally on this device.
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Load Data or Initial Array
-    let db = JSON.parse(localStorage.getItem('StoreOps_LocalDB')) || [];
+    // Intro handling
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const overlay = document.getElementById('intro-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 800);
+        }, 1500);
+    });
 
-    // Set Today's Date
+    let db = JSON.parse(localStorage.getItem('StoreOps_LocalDB')) || [];
     document.getElementById('date').valueAsDate = new Date();
 
     function logEntry() {
@@ -201,29 +231,29 @@
         const amt = parseFloat(document.getElementById('amt').value);
         const type = document.querySelector('input[name="type"]:checked').value;
 
-        if (!date || !desc || isNaN(amt)) return alert("Missing entry details.");
+        if (!date || !desc || isNaN(amt)) return alert("Please fill all fields.");
 
         db.unshift({ id: Date.now(), date, cat, desc, amt, type });
         sync();
-
         document.getElementById('desc').value = '';
         document.getElementById('amt').value = '';
     }
 
     function removeEntry(id) {
-        db = db.filter(item => item.id !== id);
-        sync();
+        if(confirm("Delete this entry?")) {
+            db = db.filter(item => item.id !== id);
+            sync();
+        }
     }
 
     function wipeData() {
-        if(confirm("DANGER: This will delete ALL history. Proceed?")) {
+        if(confirm("Erase all data? This cannot be undone.")) {
             db = [];
             sync();
         }
     }
 
     function sync() {
-        // Save to LocalStorage
         localStorage.setItem('StoreOps_LocalDB', JSON.stringify(db));
         render();
     }
@@ -238,15 +268,15 @@
             if(isSale) sales += item.amt; else expenses += item.amt;
 
             list.innerHTML += `
-                <tr class="small">
-                    <td class="ps-3 text-muted" style="font-size: 0.75rem;">${item.date}</td>
-                    <td><span class="badge bg-light text-dark border">${item.cat}</span></td>
-                    <td class="fw-bold">${item.desc}</td>
-                    <td class="text-end ${isSale ? 'amount-pos' : 'amount-neg'}">
-                        ₱${item.amt.toLocaleString()}
+                <tr class="align-middle">
+                    <td class="ps-3 text-muted small" style="font-size: 0.7rem;">${item.date}</td>
+                    <td><span class="badge bg-light text-dark border" style="font-size: 0.65rem;">${item.cat}</span></td>
+                    <td class="fw-semibold small">${item.desc}</td>
+                    <td class="text-end ${isSale ? 'amount-pos' : 'amount-neg'} small">
+                        ₱${item.amt.toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-sm p-0 text-muted" onclick="removeEntry(${item.id})">✖</button>
+                        <button class="btn btn-sm text-muted" onclick="removeEntry(${item.id})">✕</button>
                     </td>
                 </tr>
             `;
@@ -258,7 +288,6 @@
         document.getElementById('netProfit').className = (sales-expenses) >= 0 ? 'mb-0 fw-bold amount-pos' : 'mb-0 fw-bold amount-neg';
     }
 
-    // Live Clock
     setInterval(() => {
         document.getElementById('clock').innerText = new Date().toLocaleString();
     }, 1000);
